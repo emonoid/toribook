@@ -1,0 +1,6 @@
+  DROP TABLE IF EXISTS passengers;
+  DROP TABLE IF EXISTS drivers;
+  DROP TABLE IF EXISTS subscriptions;
+  DROP TABLE IF EXISTS trips;
+  DROP TABLE IF EXISTS cars;
+  DROP TABLE IF EXISTS fares;
