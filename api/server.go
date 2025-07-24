@@ -41,23 +41,20 @@ func NewServer(config utils.Config, store *db.Store) (*Server, error) {
 
 func (server *Server) setupRouters() {
 	router := gin.Default()
+	protectedRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
-	// //user routes
-	// router.POST("/users", server.createUser)
-	// router.GET("/users/:username", server.getUser)
-	// router.POST("/users/login", server.loginUser)
+	apiVersion := "/api/v1/"
+	router.GET("/", func(ctx *gin.Context) {
+		ctx.JSON(200, fmt.Sprintf("Welcome to Toribook API %s", apiVersion))
+	})
 
-	// protectedRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
-	// // account routes
-	// protectedRoutes.POST("/accounts", server.createAccount)
-	// protectedRoutes.GET("/accounts/:id", server.getAccount)
-	// protectedRoutes.GET("/accounts", server.getAllAccounts)
-	// protectedRoutes.PUT("accounts/update", server.updateAccount)
-	// protectedRoutes.DELETE("accounts/delete/:id", server.deleteAccount)
+	// passenger routes 
+	router.POST(apiVersion + "passenger/registration", server.createPassenger)
+	router.POST(apiVersion + "passenger/login", server.loginPassenger)
+	protectedRoutes.GET(apiVersion + "passenger/:id", server.getPassenger)
 
-	// // transfer money routes
-	// protectedRoutes.POST("/transfer", server.transferBalance)
+	// driver routes
 
 	server.router = router
 }
@@ -66,6 +63,12 @@ func (server *Server) Start(address string) error {
 	return server.router.Run(address)
 }
 
-func errorResponse(err error) gin.H {
-	return gin.H{"error": err.Error()}
+type FinalResponse struct {
+	Status  bool        `json:"status"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
+func finalResponse(response FinalResponse) gin.H {
+	return gin.H{"status": response.Status,"message": response.Message, "data": response.Data}
 }

@@ -19,20 +19,20 @@ RETURNING id, hashed_password, full_name, driving_license, mobile, car_id, car_t
 `
 
 type CreateDriverParams struct {
-	HashedPassword       string `json:"hashed_password"`
-	FullName             string `json:"full_name"`
-	DrivingLicense       string `json:"driving_license"`
-	Mobile               string `json:"mobile"`
-	CarID                int64  `json:"car_id"`
-	CarType              string `json:"car_type"`
-	CarImage             string `json:"car_image"`
-	OnlineStatus         bool   `json:"online_status"`
-	Rating               int32  `json:"rating"`
-	ProfileStatus        int32  `json:"profile_status"`
-	SubscriptionStatus   bool   `json:"subscription_status"`
-	SubscriptionPackage  string `json:"subscription_package"`
-	SubscriptionAmount   string `json:"subscription_amount"`
-	SubscriptionValidity int32  `json:"subscription_validity"`
+	HashedPassword       string  `json:"hashed_password"`
+	FullName             string  `json:"full_name"`
+	DrivingLicense       string  `json:"driving_license"`
+	Mobile               string  `json:"mobile"`
+	CarID                int64   `json:"car_id"`
+	CarType              string  `json:"car_type"`
+	CarImage             string  `json:"car_image"`
+	OnlineStatus         bool    `json:"online_status"`
+	Rating               float64 `json:"rating"`
+	ProfileStatus        int32   `json:"profile_status"`
+	SubscriptionStatus   bool    `json:"subscription_status"`
+	SubscriptionPackage  string  `json:"subscription_package"`
+	SubscriptionAmount   string  `json:"subscription_amount"`
+	SubscriptionValidity int32   `json:"subscription_validity"`
 }
 
 func (q *Queries) CreateDriver(ctx context.Context, arg CreateDriverParams) (Driver, error) {
@@ -182,21 +182,21 @@ WHERE id = $1
 `
 
 type UpdateDriverParams struct {
-	ID                   int64  `json:"id"`
-	HashedPassword       string `json:"hashed_password"`
-	FullName             string `json:"full_name"`
-	DrivingLicense       string `json:"driving_license"`
-	Mobile               string `json:"mobile"`
-	CarID                int64  `json:"car_id"`
-	CarType              string `json:"car_type"`
-	CarImage             string `json:"car_image"`
-	OnlineStatus         bool   `json:"online_status"`
-	Rating               int32  `json:"rating"`
-	ProfileStatus        int32  `json:"profile_status"`
-	SubscriptionStatus   bool   `json:"subscription_status"`
-	SubscriptionPackage  string `json:"subscription_package"`
-	SubscriptionAmount   string `json:"subscription_amount"`
-	SubscriptionValidity int32  `json:"subscription_validity"`
+	ID                   int64   `json:"id"`
+	HashedPassword       string  `json:"hashed_password"`
+	FullName             string  `json:"full_name"`
+	DrivingLicense       string  `json:"driving_license"`
+	Mobile               string  `json:"mobile"`
+	CarID                int64   `json:"car_id"`
+	CarType              string  `json:"car_type"`
+	CarImage             string  `json:"car_image"`
+	OnlineStatus         bool    `json:"online_status"`
+	Rating               float64 `json:"rating"`
+	ProfileStatus        int32   `json:"profile_status"`
+	SubscriptionStatus   bool    `json:"subscription_status"`
+	SubscriptionPackage  string  `json:"subscription_package"`
+	SubscriptionAmount   string  `json:"subscription_amount"`
+	SubscriptionValidity int32   `json:"subscription_validity"`
 }
 
 func (q *Queries) UpdateDriver(ctx context.Context, arg UpdateDriverParams) error {

@@ -3,7 +3,7 @@ CREATE TABLE "passengers" (
   "hashed_password" varchar NOT NULL,
   "full_name" varchar NOT NULL,
   "email" varchar UNIQUE NOT NULL,
-  "rating" int NOT NULL,
+  "rating" float NOT NULL DEFAULT 0.0,
   "password_changed_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
   "created_at" timestamptz NOT NULL DEFAULT 'now()'
 );
@@ -18,7 +18,7 @@ CREATE TABLE "drivers" (
   "car_type" varchar NOT NULL,
   "car_image" text NOT NULL,
   "online_status" bool NOT NULL,
-  "rating" int NOT NULL,
+  "rating" float NOT NULL DEFAULT 0.0,
   "profile_status" int NOT NULL,
   "subscription_status" bool NOT NULL,
   "subscription_package" varchar NOT NULL,

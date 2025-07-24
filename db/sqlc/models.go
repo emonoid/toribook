@@ -27,7 +27,7 @@ type Driver struct {
 	CarType              string    `json:"car_type"`
 	CarImage             string    `json:"car_image"`
 	OnlineStatus         bool      `json:"online_status"`
-	Rating               int32     `json:"rating"`
+	Rating               float64   `json:"rating"`
 	ProfileStatus        int32     `json:"profile_status"`
 	SubscriptionStatus   bool      `json:"subscription_status"`
 	SubscriptionPackage  string    `json:"subscription_package"`
@@ -51,7 +51,7 @@ type Passenger struct {
 	HashedPassword    string    `json:"hashed_password"`
 	FullName          string    `json:"full_name"`
 	Email             string    `json:"email"`
-	Rating            int32     `json:"rating"`
+	Rating            float64   `json:"rating"`
 	PasswordChangedAt time.Time `json:"password_changed_at"`
 	CreatedAt         time.Time `json:"created_at"`
 }

@@ -19,10 +19,10 @@ RETURNING id, hashed_password, full_name, email, rating, password_changed_at, cr
 `
 
 type CreatePassengerParams struct {
-	HashedPassword string `json:"hashed_password"`
-	FullName       string `json:"full_name"`
-	Email          string `json:"email"`
-	Rating         int32  `json:"rating"`
+	HashedPassword string  `json:"hashed_password"`
+	FullName       string  `json:"full_name"`
+	Email          string  `json:"email"`
+	Rating         float64 `json:"rating"`
 }
 
 func (q *Queries) CreatePassenger(ctx context.Context, arg CreatePassengerParams) (Passenger, error) {
@@ -61,6 +61,25 @@ SELECT id, hashed_password, full_name, email, rating, password_changed_at, creat
 // Passengers
 func (q *Queries) GetPassenger(ctx context.Context, id int64) (Passenger, error) {
 	row := q.db.QueryRowContext(ctx, getPassenger, id)
+	var i Passenger
+	err := row.Scan(
+		&i.ID,
+		&i.HashedPassword,
+		&i.FullName,
+		&i.Email,
+		&i.Rating,
+		&i.PasswordChangedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getPassengerByEmail = `-- name: GetPassengerByEmail :one
+SELECT id, hashed_password, full_name, email, rating, password_changed_at, created_at FROM passengers WHERE email = $1 LIMIT 1
+`
+
+func (q *Queries) GetPassengerByEmail(ctx context.Context, email string) (Passenger, error) {
+	row := q.db.QueryRowContext(ctx, getPassengerByEmail, email)
 	var i Passenger
 	err := row.Scan(
 		&i.ID,
@@ -119,11 +138,11 @@ WHERE id = $1
 `
 
 type UpdatePassengerParams struct {
-	ID             int64  `json:"id"`
-	HashedPassword string `json:"hashed_password"`
-	FullName       string `json:"full_name"`
-	Email          string `json:"email"`
-	Rating         int32  `json:"rating"`
+	ID             int64   `json:"id"`
+	HashedPassword string  `json:"hashed_password"`
+	FullName       string  `json:"full_name"`
+	Email          string  `json:"email"`
+	Rating         float64 `json:"rating"`
 }
 
 func (q *Queries) UpdatePassenger(ctx context.Context, arg UpdatePassengerParams) error {

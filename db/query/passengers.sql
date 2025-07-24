@@ -2,6 +2,9 @@
 -- name: GetPassenger :one
 SELECT * FROM passengers WHERE id = $1 LIMIT 1;
 
+-- name: GetPassengerByEmail :one
+SELECT * FROM passengers WHERE email = $1 LIMIT 1;
+
 -- name: ListPassengers :many
 SELECT * FROM passengers ORDER BY full_name;
 
