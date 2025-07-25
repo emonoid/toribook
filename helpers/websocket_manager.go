@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"log"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -36,12 +37,23 @@ func (m *WebSocketManager) RemoveClient(channel string, conn *websocket.Conn) {
 }
 
 func (m *WebSocketManager) Broadcast(channel string, data interface{}) {
-	m.lock.RLock()
-	defer m.lock.RUnlock()
-	for _, conn := range m.clients[channel] {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	conns := m.clients[channel]
+	activeConns := make([]*websocket.Conn, 0, len(conns))
+
+	for _, conn := range conns {
 		err := conn.WriteJSON(data)
 		if err != nil {
+			log.Println("WebSocket write error, removing connection:", err)
 			conn.Close()
+			continue // skip dead connection
 		}
+		activeConns = append(activeConns, conn) // keep alive ones
 	}
+
+	// Update the list with only active connections
+	m.clients[channel] = activeConns
 }
+

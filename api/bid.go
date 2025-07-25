@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -110,9 +112,9 @@ func (server *Server) BidWebSocketHandler(redisClient *redis.Client) gin.Handler
 }
 
 func (server *Server) bidWebSocket(ctx *gin.Context, redisClient *redis.Client) {
-
 	bookingID := ctx.Param("booking_id")
 	tokenString := ctx.Query("token")
+
 	if tokenString == "" {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing token"})
 		return
@@ -130,12 +132,47 @@ func (server *Server) bidWebSocket(ctx *gin.Context, redisClient *redis.Client) 
 	if err != nil {
 		return
 	}
-	defer conn.Close()
 
-	sub := redisClient.Subscribe(ctx, "bids_channel:"+bookingID)
-	ch := sub.Channel()
+	channel := "bids_channel:" + bookingID
+	server.webSocketManager.AddClient(channel, conn)
+	defer func() {
+		server.webSocketManager.RemoveClient(channel, conn)
+		conn.Close()
+	}()
 
-	for msg := range ch {
-		conn.WriteMessage(websocket.TextMessage, []byte(msg.Payload))
+	// Call listener only if not yet started
+	server.redisLock.Lock()
+	if !server.redisSubscribers[channel] {
+		server.redisSubscribers[channel] = true
+		server.StartBidChannelListener(redisClient, bookingID)
 	}
+	server.redisLock.Unlock()
+
+	// Optional: keep connection alive with read pump
+	for {
+		if _, _, err := conn.ReadMessage(); err != nil {
+			break
+		}
+	}
+}
+
+func (server *Server) StartBidChannelListener(redisClient *redis.Client, bookingID string) {
+	channel := "bids_channel:" + bookingID
+
+	go func() {
+		sub := redisClient.Subscribe(context.Background(), channel)
+		defer sub.Close()
+
+		ch := sub.Channel()
+
+		for msg := range ch {
+			var bid Bid
+			err := json.Unmarshal([]byte(msg.Payload), &bid)
+			if err != nil {
+				log.Println("Invalid bid payload:", err)
+				continue
+			}
+			server.webSocketManager.Broadcast(channel, bid)
+		}
+	}()
 }

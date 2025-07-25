@@ -105,10 +105,10 @@ func (server *Server) createTrip(ctx *gin.Context) {
 		Message: "Trip created successfully",
 		Data:    response}))
 
-	server.webSocketManager.Broadcast("trips", gin.H{
-		"type": "trip_created",
-		"data": response,
-	})
+	server.webSocketManager.Broadcast("trips", finalResponse(FinalResponse{
+		Status:  false,
+		Message: "Trip created successfully",
+		Data:    response}))
 }
 
 type GetTripRequest struct {
@@ -167,11 +167,14 @@ var tripUpgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-func (server *Server) tripWebSocket(ctx *gin.Context) { 
+func (server *Server) tripWebSocket(ctx *gin.Context) {
 	tokenString := ctx.Query("token")
 
 	if tokenString == "" {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing token"})
+		ctx.JSON(http.StatusUnauthorized,finalResponse(FinalResponse{
+		Status:  false,
+		Message: "Trip created successfully",
+		Data:    "Missing token"}))
 		return
 	}
 

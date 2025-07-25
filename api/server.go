@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"sync"
 
 	db "github.com/emonoid/toribook.git/db/sqlc"
 	"github.com/emonoid/toribook.git/helpers"
@@ -13,11 +14,13 @@ import (
 )
 
 type Server struct {
-	store      *db.Store
-	router     *gin.Engine
-	tokenMaker token.Maker
-	config     utils.Config
+	store            *db.Store
+	router           *gin.Engine
+	tokenMaker       token.Maker
+	config           utils.Config
 	webSocketManager *helpers.WebSocketManager
+	redisSubscribers map[string]bool
+	redisLock        sync.Mutex
 }
 
 func NewServer(config utils.Config, store *db.Store) (*Server, error) {
@@ -29,7 +32,7 @@ func NewServer(config utils.Config, store *db.Store) (*Server, error) {
 		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
 
-	server := &Server{store: store, tokenMaker: tokenMaker, config: config, webSocketManager: helpers.NewWebSocketManager()}
+	server := &Server{store: store, tokenMaker: tokenMaker, config: config, webSocketManager: helpers.NewWebSocketManager(), redisSubscribers: make(map[string]bool), redisLock: sync.Mutex{}}
 
 	// Register custom validation if needed
 	// if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
@@ -67,7 +70,7 @@ func (server *Server) setupRouters() {
 	router.GET(apiVersion+"ws/trips", server.tripWebSocket)
 
 	// bid routes
-	protectedRoutes.POST(apiVersion+"bid/submit",server.bidSubmitHandler(redisClient))
+	protectedRoutes.POST(apiVersion+"bid/submit", server.bidSubmitHandler(redisClient))
 	protectedRoutes.GET(apiVersion+"bids/:booking_id", server.getBidsHandler(redisClient))
 	router.GET(apiVersion+"ws/bids/:booking_id", server.BidWebSocketHandler(redisClient))
 
