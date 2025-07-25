@@ -3,6 +3,9 @@
 -- name: GetDriver :one
 SELECT * FROM drivers WHERE id = $1 LIMIT 1;
 
+-- name: GetDriverByMobile :one
+SELECT * FROM drivers WHERE mobile = $1 LIMIT 1;
+
 -- name: ListDrivers :many
 SELECT * FROM drivers ORDER BY full_name;
 

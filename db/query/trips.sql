@@ -3,6 +3,9 @@
 -- name: GetTrip :one
 SELECT * FROM trips WHERE id = $1 LIMIT 1;
 
+-- name: GetTripByBookingID :one
+SELECT * FROM trips WHERE booking_id = $1 LIMIT 1;
+
 -- name: ListTrips :many
 SELECT * FROM trips ORDER BY id DESC;
 

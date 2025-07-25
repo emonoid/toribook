@@ -117,6 +117,35 @@ func (q *Queries) GetTrip(ctx context.Context, id int64) (Trip, error) {
 	return i, err
 }
 
+const getTripByBookingID = `-- name: GetTripByBookingID :one
+SELECT id, booking_id, trip_status, pickup_location, pickup_lat, pickup_long, dropoff_location, dropoff_lat, dropoff_long, driver_id, driver_name, driver_mobile, car_id, car_type, car_image, fare, created_at FROM trips WHERE booking_id = $1 LIMIT 1
+`
+
+func (q *Queries) GetTripByBookingID(ctx context.Context, bookingID string) (Trip, error) {
+	row := q.db.QueryRowContext(ctx, getTripByBookingID, bookingID)
+	var i Trip
+	err := row.Scan(
+		&i.ID,
+		&i.BookingID,
+		&i.TripStatus,
+		&i.PickupLocation,
+		&i.PickupLat,
+		&i.PickupLong,
+		&i.DropoffLocation,
+		&i.DropoffLat,
+		&i.DropoffLong,
+		&i.DriverID,
+		&i.DriverName,
+		&i.DriverMobile,
+		&i.CarID,
+		&i.CarType,
+		&i.CarImage,
+		&i.Fare,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const listTrips = `-- name: ListTrips :many
 SELECT id, booking_id, trip_status, pickup_location, pickup_lat, pickup_long, dropoff_location, dropoff_lat, dropoff_long, driver_id, driver_name, driver_mobile, car_id, car_type, car_image, fare, created_at FROM trips ORDER BY id DESC
 `

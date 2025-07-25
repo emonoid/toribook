@@ -116,6 +116,36 @@ func (q *Queries) GetDriver(ctx context.Context, id int64) (Driver, error) {
 	return i, err
 }
 
+const getDriverByMobile = `-- name: GetDriverByMobile :one
+SELECT id, hashed_password, full_name, driving_license, mobile, car_id, car_type, car_image, online_status, rating, profile_status, subscription_status, subscription_package, subscription_amount, subscription_validity, subscription_expire_at, password_changed_at, created_at FROM drivers WHERE mobile = $1 LIMIT 1
+`
+
+func (q *Queries) GetDriverByMobile(ctx context.Context, mobile string) (Driver, error) {
+	row := q.db.QueryRowContext(ctx, getDriverByMobile, mobile)
+	var i Driver
+	err := row.Scan(
+		&i.ID,
+		&i.HashedPassword,
+		&i.FullName,
+		&i.DrivingLicense,
+		&i.Mobile,
+		&i.CarID,
+		&i.CarType,
+		&i.CarImage,
+		&i.OnlineStatus,
+		&i.Rating,
+		&i.ProfileStatus,
+		&i.SubscriptionStatus,
+		&i.SubscriptionPackage,
+		&i.SubscriptionAmount,
+		&i.SubscriptionValidity,
+		&i.SubscriptionExpireAt,
+		&i.PasswordChangedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const listDrivers = `-- name: ListDrivers :many
 SELECT id, hashed_password, full_name, driving_license, mobile, car_id, car_type, car_image, online_status, rating, profile_status, subscription_status, subscription_package, subscription_amount, subscription_validity, subscription_expire_at, password_changed_at, created_at FROM drivers ORDER BY full_name
 `
