@@ -46,21 +46,6 @@ func (server *Server) bidSubmit(ctx *gin.Context, redisClient *redis.Client) {
 	ctx.JSON(200, gin.H{"status": "bid placed"})
 }
 
-func (server *Server) getBidsHandler(redisClient *redis.Client) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		server.getBids(ctx, redisClient)
-	}
-}
-
-func (server *Server) getBids(ctx *gin.Context, redisClient *redis.Client) {
-	bookingID := ctx.Param("booking_id")
-	bids, err := GetBids(redisClient, bookingID, ctx)
-	if err != nil {
-		ctx.JSON(500, gin.H{"error": "failed to fetch bids"})
-		return
-	}
-	ctx.JSON(200, bids)
-}
 
 func AddBid(client *redis.Client, bookingID string, bid Bid, ctx *gin.Context) error {
 	key := "bids:" + bookingID
@@ -74,6 +59,20 @@ func AddBid(client *redis.Client, bookingID string, bid Bid, ctx *gin.Context) e
 		client.Expire(ctx, key, 15*time.Minute)
 	}
 	return err
+}
+
+
+func (server *Server) getBidListHandler(redisClient *redis.Client) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		bookingID := ctx.Param("booking_id")
+
+		bids, err := GetBids(redisClient, bookingID, ctx)
+		if err != nil {
+			ctx.JSON(500, gin.H{"error": "failed to fetch bids"})
+			return
+		}
+		ctx.JSON(200, gin.H{"bids": bids})
+	}
 }
 
 func GetBids(client *redis.Client, bookingID string, ctx *gin.Context) ([]Bid, error) {
@@ -91,6 +90,8 @@ func GetBids(client *redis.Client, bookingID string, ctx *gin.Context) ([]Bid, e
 	}
 	return bids, nil
 }
+
+
 
 func PublishBid(client *redis.Client, bookingID string, bid Bid, ctx *gin.Context) error {
 	channel := "bids_channel:" + bookingID
@@ -148,7 +149,7 @@ func (server *Server) bidWebSocket(ctx *gin.Context, redisClient *redis.Client) 
 	}
 	server.redisLock.Unlock()
 
-	// Optional: keep connection alive with read pump
+	// Optional: keep ws connection alive with read pump
 	for {
 		if _, _, err := conn.ReadMessage(); err != nil {
 			break

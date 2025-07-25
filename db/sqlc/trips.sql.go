@@ -147,11 +147,16 @@ func (q *Queries) GetTripByBookingID(ctx context.Context, bookingID string) (Tri
 }
 
 const listTrips = `-- name: ListTrips :many
-SELECT id, booking_id, trip_status, pickup_location, pickup_lat, pickup_long, dropoff_location, dropoff_lat, dropoff_long, driver_id, driver_name, driver_mobile, car_id, car_type, car_image, fare, created_at FROM trips ORDER BY id DESC
+SELECT id, booking_id, trip_status, pickup_location, pickup_lat, pickup_long, dropoff_location, dropoff_lat, dropoff_long, driver_id, driver_name, driver_mobile, car_id, car_type, car_image, fare, created_at FROM trips ORDER BY created_at DESC LIMIT $1 OFFSET $2
 `
 
-func (q *Queries) ListTrips(ctx context.Context) ([]Trip, error) {
-	rows, err := q.db.QueryContext(ctx, listTrips)
+type ListTripsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListTrips(ctx context.Context, arg ListTripsParams) ([]Trip, error) {
+	rows, err := q.db.QueryContext(ctx, listTrips, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

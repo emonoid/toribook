@@ -163,6 +163,60 @@ func (server *Server) getTrip(ctx *gin.Context) {
 
 }
 
+type GetAllTripsRequest struct {
+	PageNumber int32 `form:"page_number" binding:"required,min=1"`
+	PerPage    int32 `form:"per_page" binding:"required"`
+}
+
+func (server *Server) getAllTrips(ctx *gin.Context) {
+	var req GetAllTripsRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, finalResponse(FinalResponse{
+			Status:  false,
+			Message: err.Error(),
+			Data:    nil}))
+		return
+	}
+
+	arg := db.ListTripsParams{
+		Limit:  req.PerPage,
+		Offset: (req.PageNumber - 1) * req.PerPage,
+	}
+
+	trips, err := server.store.ListTrips(ctx, arg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, finalResponse(FinalResponse{
+				Status:  false,
+				Message: "No trips found",
+				Data:    []db.Trip{}}))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, finalResponse(FinalResponse{
+			Status:  false,
+			Message: err.Error(),
+			Data:    []db.Trip{}},
+		))
+		return
+	}
+
+	if trips == nil {
+		ctx.JSON(http.StatusNotFound, finalResponse(FinalResponse{
+			Status:  false,
+			Message: "No trips found",
+			Data:    []db.Trip{}},
+		))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, finalResponse(FinalResponse{
+		Status:  true,
+		Message: "Trips retrieved successfully",
+		Data:    trips,
+	}))
+
+}
+
 var tripUpgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
@@ -171,10 +225,10 @@ func (server *Server) tripWebSocket(ctx *gin.Context) {
 	tokenString := ctx.Query("token")
 
 	if tokenString == "" {
-		ctx.JSON(http.StatusUnauthorized,finalResponse(FinalResponse{
-		Status:  false,
-		Message: "Trip created successfully",
-		Data:    "Missing token"}))
+		ctx.JSON(http.StatusUnauthorized, finalResponse(FinalResponse{
+			Status:  false,
+			Message: "Trip created successfully",
+			Data:    "Missing token"}))
 		return
 	}
 
