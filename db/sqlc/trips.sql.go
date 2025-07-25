@@ -196,18 +196,92 @@ func (q *Queries) ListTrips(ctx context.Context, arg ListTripsParams) ([]Trip, e
 	return items, nil
 }
 
-const updateTripStatus = `-- name: UpdateTripStatus :exec
+const tripAccept = `-- name: TripAccept :one
+UPDATE trips
+SET
+  trip_status = $2,
+  driver_id = $3,
+  driver_name = $4,
+  driver_mobile = $5,
+  fare = $6
+WHERE booking_id = $1
+RETURNING id, booking_id, trip_status, pickup_location, pickup_lat, pickup_long, dropoff_location, dropoff_lat, dropoff_long, driver_id, driver_name, driver_mobile, car_id, car_type, car_image, fare, created_at
+`
+
+type TripAcceptParams struct {
+	BookingID    string         `json:"booking_id"`
+	TripStatus   string         `json:"trip_status"`
+	DriverID     sql.NullInt64  `json:"driver_id"`
+	DriverName   sql.NullString `json:"driver_name"`
+	DriverMobile sql.NullString `json:"driver_mobile"`
+	Fare         sql.NullInt32  `json:"fare"`
+}
+
+func (q *Queries) TripAccept(ctx context.Context, arg TripAcceptParams) (Trip, error) {
+	row := q.db.QueryRowContext(ctx, tripAccept,
+		arg.BookingID,
+		arg.TripStatus,
+		arg.DriverID,
+		arg.DriverName,
+		arg.DriverMobile,
+		arg.Fare,
+	)
+	var i Trip
+	err := row.Scan(
+		&i.ID,
+		&i.BookingID,
+		&i.TripStatus,
+		&i.PickupLocation,
+		&i.PickupLat,
+		&i.PickupLong,
+		&i.DropoffLocation,
+		&i.DropoffLat,
+		&i.DropoffLong,
+		&i.DriverID,
+		&i.DriverName,
+		&i.DriverMobile,
+		&i.CarID,
+		&i.CarType,
+		&i.CarImage,
+		&i.Fare,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateTripStatus = `-- name: UpdateTripStatus :one
 UPDATE trips
 SET trip_status = $2
-WHERE id = $1
+WHERE booking_id = $1
+RETURNING id, booking_id, trip_status, pickup_location, pickup_lat, pickup_long, dropoff_location, dropoff_lat, dropoff_long, driver_id, driver_name, driver_mobile, car_id, car_type, car_image, fare, created_at
 `
 
 type UpdateTripStatusParams struct {
-	ID         int64  `json:"id"`
+	BookingID  string `json:"booking_id"`
 	TripStatus string `json:"trip_status"`
 }
 
-func (q *Queries) UpdateTripStatus(ctx context.Context, arg UpdateTripStatusParams) error {
-	_, err := q.db.ExecContext(ctx, updateTripStatus, arg.ID, arg.TripStatus)
-	return err
+func (q *Queries) UpdateTripStatus(ctx context.Context, arg UpdateTripStatusParams) (Trip, error) {
+	row := q.db.QueryRowContext(ctx, updateTripStatus, arg.BookingID, arg.TripStatus)
+	var i Trip
+	err := row.Scan(
+		&i.ID,
+		&i.BookingID,
+		&i.TripStatus,
+		&i.PickupLocation,
+		&i.PickupLat,
+		&i.PickupLong,
+		&i.DropoffLocation,
+		&i.DropoffLat,
+		&i.DropoffLong,
+		&i.DriverID,
+		&i.DriverName,
+		&i.DriverMobile,
+		&i.CarID,
+		&i.CarType,
+		&i.CarImage,
+		&i.Fare,
+		&i.CreatedAt,
+	)
+	return i, err
 }

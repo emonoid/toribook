@@ -17,10 +17,23 @@ INSERT INTO trips (
 )
 RETURNING *;
 
--- name: UpdateTripStatus :exec
+-- name: UpdateTripStatus :one
 UPDATE trips
 SET trip_status = $2
-WHERE id = $1;
+WHERE booking_id = $1
+RETURNING *;
+
+-- name: TripAccept :one 
+UPDATE trips
+SET
+  trip_status = $2,
+  driver_id = $3,
+  driver_name = $4,
+  driver_mobile = $5,
+  fare = $6
+WHERE booking_id = $1
+RETURNING *;
+
 
 -- name: DeleteTrip :exec
 DELETE FROM trips WHERE id = $1;

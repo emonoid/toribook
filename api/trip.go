@@ -217,6 +217,53 @@ func (server *Server) getAllTrips(ctx *gin.Context) {
 
 }
 
+type UpdateTripStatusRequest struct {
+	BookingID  string `json:"booking_id" binding:"required"`
+	TripStatus string `json:"trip_status" binding:"required"`
+}
+
+func (server *Server) updateTripStatus(ctx *gin.Context) {
+	var req UpdateTripStatusRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, finalResponse(FinalResponse{
+			Status:  false,
+			Message: err.Error()}))
+		return
+	}
+
+	trip, err := server.store.UpdateTripStatus(ctx, db.UpdateTripStatusParams{
+		BookingID:  req.BookingID,
+		TripStatus: req.TripStatus,
+	})
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, finalResponse(FinalResponse{
+				Status:  false,
+				Message: "Trip not found",
+				Data:    nil}))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, finalResponse(FinalResponse{
+			Status:  false,
+			Message: err.Error()}))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, finalResponse(FinalResponse{
+		Status:  true,
+		Message: "Trip status updated successfully",
+		Data:    trip,
+	}))
+
+	server.webSocketManager.Broadcast("trip_status: "+trip.BookingID, finalResponse(FinalResponse{
+		Status:  true,
+		Message: "Trip status updated",
+		Data:    trip,
+	}))
+}
+
 var tripUpgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
@@ -257,4 +304,43 @@ func (server *Server) tripWebSocket(ctx *gin.Context) {
 		}
 	}
 
+}
+
+func (server *Server) tripStatusUpdateWebSocket(ctx *gin.Context) {
+	tokenString := ctx.Query("token")
+	bookingID := ctx.Query("booking_id")
+
+	if tokenString == "" || bookingID == "" {
+		ctx.JSON(http.StatusBadRequest, finalResponse(FinalResponse{
+			Status:  false,
+			Message: "Missing token or booking_id",
+		}))
+		return
+	}
+
+	_, err := server.tokenMaker.VerifyToken(tokenString)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, finalResponse(FinalResponse{
+			Status:  false,
+			Message: err.Error(),
+		}))
+		return
+	}
+
+	conn, err := tripUpgrader.Upgrade(ctx.Writer, ctx.Request, nil)
+	if err != nil {
+		return
+	}
+
+	server.webSocketManager.AddClient("trip_status: "+bookingID, conn)
+	defer func() {
+		server.webSocketManager.RemoveClient("trip_status: "+bookingID, conn)
+		conn.Close()
+	}()
+
+	for {
+		if _, _, err := conn.ReadMessage(); err != nil {
+			break
+		}
+	}
 }
