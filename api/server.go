@@ -64,11 +64,14 @@ func (server *Server) setupRouters() {
 	router.POST(apiVersion+"driver/login", server.loginDriver)
 	protectedRoutes.GET(apiVersion+"driver/:id", server.getDriver)
 
+	// cars routes
+	protectedRoutes.GET(apiVersion+"car/all", server.getAllCars)
+
 	// trip routes
 	protectedRoutes.POST(apiVersion+"trip/create", server.createTrip)
 	protectedRoutes.GET(apiVersion+"trip/:id", server.getTrip)
 	router.GET(apiVersion+"ws/trips", server.tripWebSocket)
-	protectedRoutes.GET(apiVersion+"trips", server.getAllTrips)
+	protectedRoutes.GET(apiVersion+"trip/all", server.getAllTrips)
 
 	// bid routes
 	protectedRoutes.POST(apiVersion+"bid/submit", server.bidSubmitHandler(redisClient))

@@ -34,18 +34,26 @@ func (server *Server) bidSubmitHandler(redisClient *redis.Client) gin.HandlerFun
 func (server *Server) bidSubmit(ctx *gin.Context, redisClient *redis.Client) {
 	var bid Bid
 	if err := ctx.BindJSON(&bid); err != nil {
-		ctx.JSON(400, gin.H{"error": "invalid bid"})
+		ctx.JSON(400, finalResponse(FinalResponse{
+			Status:  false,
+			Message: "Invalid bid",
+			Data:    nil}))
 		return
 	}
 	err := AddBid(redisClient, bid.BookingID, bid, ctx)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "failed to save bid"})
+		ctx.JSON(500, finalResponse(FinalResponse{
+			Status:  false,
+			Message: "Failed to save bid",
+			Data:    nil}))
 		return
 	}
 	_ = PublishBid(redisClient, bid.BookingID, bid, ctx)
-	ctx.JSON(200, gin.H{"status": "bid placed"})
+	ctx.JSON(200, finalResponse(FinalResponse{
+		Status:  false,
+		Message: "Bid submitted successfully",
+		Data:    nil}))
 }
-
 
 func AddBid(client *redis.Client, bookingID string, bid Bid, ctx *gin.Context) error {
 	key := "bids:" + bookingID
@@ -61,17 +69,22 @@ func AddBid(client *redis.Client, bookingID string, bid Bid, ctx *gin.Context) e
 	return err
 }
 
-
 func (server *Server) getBidListHandler(redisClient *redis.Client) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		bookingID := ctx.Param("booking_id")
 
 		bids, err := GetBids(redisClient, bookingID, ctx)
 		if err != nil {
-			ctx.JSON(500, gin.H{"error": "failed to fetch bids"})
+			ctx.JSON(500, finalResponse(FinalResponse{
+				Status:  false,
+				Message: "Failed to retrieve bids",
+				Data:    nil}))
 			return
 		}
-		ctx.JSON(200, gin.H{"bids": bids})
+		ctx.JSON(200, finalResponse(FinalResponse{
+			Status:  false,
+			Message: "Bids retrieved successfully",
+			Data:    bids}))
 	}
 }
 
@@ -90,8 +103,6 @@ func GetBids(client *redis.Client, bookingID string, ctx *gin.Context) ([]Bid, e
 	}
 	return bids, nil
 }
-
-
 
 func PublishBid(client *redis.Client, bookingID string, bid Bid, ctx *gin.Context) error {
 	channel := "bids_channel:" + bookingID
