@@ -64,9 +64,9 @@ func (server *Server) setupRouters() {
 	protectedRoutes.GET(apiVersion+"trip/:id", server.getTrip)
 
 	// bid routes
-	protectedRoutes.POST("/bid/submit",server.bidSubmitHandler(redisClient))
-	protectedRoutes.GET("/bids/:booking_id", server.getBidsHandler(redisClient))
-	protectedRoutes.GET("/ws/bids/:booking_id", server.BidWebSocketHandler(redisClient))
+	protectedRoutes.POST(apiVersion+"bid/submit",server.bidSubmitHandler(redisClient))
+	protectedRoutes.GET(apiVersion+"bids/:booking_id", server.getBidsHandler(redisClient))
+	router.GET(apiVersion+"ws/bids/:booking_id", server.BidWebSocketHandler(redisClient))
 
 	server.router = router
 }

@@ -1,8 +1,8 @@
 package api
 
 import (
-	"encoding/json"
-	"net/http"
+	"encoding/json" 
+	"net/http" 
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -60,8 +60,6 @@ func (server *Server) getBids(ctx *gin.Context, redisClient *redis.Client) {
 	ctx.JSON(200, bids)
 }
 
-
-
 func AddBid(client *redis.Client, bookingID string, bid Bid, ctx *gin.Context) error {
 	key := "bids:" + bookingID
 	bidJSON, err := json.Marshal(bid)
@@ -111,20 +109,34 @@ func (s *Server) BidWebSocketHandler(redisClient *redis.Client) gin.HandlerFunc 
 	}
 }
 
-func (s *Server) bidWebSocket(ctx *gin.Context, redisClient *redis.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		bookingID := c.Param("booking_id")
-		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-		if err != nil {
-			return
-		}
-		defer conn.Close()
+func (s *Server) bidWebSocket(ctx *gin.Context, redisClient *redis.Client) {
 
-		sub := redisClient.Subscribe(ctx, "bids_channel:"+bookingID)
-		ch := sub.Channel()
+	bookingID := ctx.Param("booking_id")
+	tokenString := ctx.Query("token")
+	if tokenString == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing token"})
+		return
+	}  
 
-		for msg := range ch {
-			conn.WriteMessage(websocket.TextMessage, []byte(msg.Payload))
-		}
+	_, err := s.tokenMaker.VerifyToken(tokenString)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, finalResponse(FinalResponse{
+			Status:  false,
+			Message: err.Error()}))
+		return
 	}
+
+	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+
+	sub := redisClient.Subscribe(ctx, "bids_channel:"+bookingID)
+	ch := sub.Channel()
+
+	for msg := range ch {
+		conn.WriteMessage(websocket.TextMessage, []byte(msg.Payload))
+	}
+
 }
