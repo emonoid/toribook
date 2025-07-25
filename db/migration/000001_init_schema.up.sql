@@ -53,7 +53,7 @@ CREATE TABLE "trips" (
   "car_id" bigint,
   "car_type" varchar,
   "car_image" text,
-  "fare" int,
+  "fare" bigint,
   "created_at" timestamptz NOT NULL DEFAULT 'now()'
 );
 
@@ -62,13 +62,5 @@ CREATE TABLE "cars" (
   "car_type" varchar NOT NULL,
   "car_model" varchar NOT NULL,
   "car_image" text NOT NULL,
-  "created_at" timestamptz NOT NULL DEFAULT 'now()'
-);
-
-CREATE TABLE "fares" (
-  "id" bigserial PRIMARY KEY,
-  "base" int NOT NULL,
-  "per_km" int NOT NULL,
-  "per_min" int NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT 'now()'
 );

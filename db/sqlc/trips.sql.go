@@ -34,7 +34,7 @@ type CreateTripParams struct {
 	CarID           sql.NullInt64  `json:"car_id"`
 	CarType         sql.NullString `json:"car_type"`
 	CarImage        sql.NullString `json:"car_image"`
-	Fare            sql.NullInt32  `json:"fare"`
+	Fare            sql.NullInt64  `json:"fare"`
 }
 
 func (q *Queries) CreateTrip(ctx context.Context, arg CreateTripParams) (Trip, error) {
@@ -214,7 +214,7 @@ type TripAcceptParams struct {
 	DriverID     sql.NullInt64  `json:"driver_id"`
 	DriverName   sql.NullString `json:"driver_name"`
 	DriverMobile sql.NullString `json:"driver_mobile"`
-	Fare         sql.NullInt32  `json:"fare"`
+	Fare         sql.NullInt64  `json:"fare"`
 }
 
 func (q *Queries) TripAccept(ctx context.Context, arg TripAcceptParams) (Trip, error) {

@@ -38,14 +38,6 @@ type Driver struct {
 	CreatedAt            time.Time `json:"created_at"`
 }
 
-type Fare struct {
-	ID        int64     `json:"id"`
-	Base      int32     `json:"base"`
-	PerKm     int32     `json:"per_km"`
-	PerMin    int32     `json:"per_min"`
-	CreatedAt time.Time `json:"created_at"`
-}
-
 type Passenger struct {
 	ID                int64     `json:"id"`
 	HashedPassword    string    `json:"hashed_password"`
@@ -80,6 +72,6 @@ type Trip struct {
 	CarID           sql.NullInt64  `json:"car_id"`
 	CarType         sql.NullString `json:"car_type"`
 	CarImage        sql.NullString `json:"car_image"`
-	Fare            sql.NullInt32  `json:"fare"`
+	Fare            sql.NullInt64  `json:"fare"`
 	CreatedAt       time.Time      `json:"created_at"`
 }

@@ -25,7 +25,7 @@ type CreateTripRequest struct {
 	CarID           *int64  `json:"car_id"`
 	CarType         *string `json:"car_type"`
 	CarImage        *string `json:"car_image"`
-	Fare            *int32  `json:"fare"`
+	Fare            *int64  `json:"fare"`
 }
 
 type TripResponse struct {
@@ -43,7 +43,7 @@ type TripResponse struct {
 	CarID           *int64  `json:"car_id"`
 	CarType         *string `json:"car_type"`
 	CarImage        *string `json:"car_image"`
-	Fare            *int32  `json:"fare"`
+	Fare            *int64  `json:"fare"`
 }
 
 func (server *Server) createTrip(ctx *gin.Context) {
@@ -70,7 +70,7 @@ func (server *Server) createTrip(ctx *gin.Context) {
 		CarID:           helpers.MakeNullInt64(req.CarID),
 		CarType:         helpers.MakeNullString(req.CarType),
 		CarImage:        helpers.MakeNullString(req.CarImage),
-		Fare:            helpers.MakeNullInt32(req.Fare),
+		Fare:            helpers.MakeNullInt64(req.Fare),
 	}
 
 	trip, err := server.store.CreateTrip(ctx, arg)
@@ -97,7 +97,7 @@ func (server *Server) createTrip(ctx *gin.Context) {
 		CarID:           helpers.NullInt64ToPtr(trip.CarID),
 		CarType:         helpers.NullStringToPtr(trip.CarType),
 		CarImage:        helpers.NullStringToPtr(trip.CarImage),
-		Fare:            helpers.NullInt32ToPtr(trip.Fare),
+		Fare:            helpers.NullInt64ToPtr(trip.Fare),
 	}
 
 	ctx.JSON(http.StatusOK, finalResponse(FinalResponse{
@@ -153,7 +153,7 @@ func (server *Server) getTrip(ctx *gin.Context) {
 		CarID:           helpers.NullInt64ToPtr(trip.CarID),
 		CarType:         helpers.NullStringToPtr(trip.CarType),
 		CarImage:        helpers.NullStringToPtr(trip.CarImage),
-		Fare:            helpers.NullInt32ToPtr(trip.Fare),
+		Fare:            helpers.NullInt64ToPtr(trip.Fare),
 	}
 
 	ctx.JSON(http.StatusOK, finalResponse(FinalResponse{
@@ -264,6 +264,61 @@ func (server *Server) updateTripStatus(ctx *gin.Context) {
 	}))
 }
 
+type TripAcceptRequest struct {
+	BookingID    string  `json:"booking_id" binding:"required"`
+	TripStatus   string  `json:"trip_status" binding:"required"`
+	DriverID     *int64  `json:"driver_id" binding:"required"`
+	DriverName   *string `json:"driver_name" binding:"required"`
+	DriverMobile *string `json:"driver_mobile" binding:"required"`
+	Fare         *int64  `json:"fare" binding:"required"`
+}
+
+func (server *Server) tripAccept(ctx *gin.Context) {
+	var req TripAcceptRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, finalResponse(FinalResponse{
+			Status:  false,
+			Message: err.Error()}))
+		return
+	}
+
+	trip, err := server.store.TripAccept(ctx, db.TripAcceptParams{
+		BookingID:    req.BookingID,
+		TripStatus:   req.TripStatus,
+		DriverID:     helpers.MakeNullInt64(req.DriverID),
+		DriverName:   helpers.MakeNullString(req.DriverName),
+		DriverMobile: helpers.MakeNullString(req.DriverMobile),
+		Fare:         helpers.MakeNullInt64(req.Fare),
+	})
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, finalResponse(FinalResponse{
+				Status:  false,
+				Message: "Trip not found",
+				Data:    nil}))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, finalResponse(FinalResponse{
+			Status:  false,
+			Message: err.Error()}))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, finalResponse(FinalResponse{
+		Status:  true,
+		Message: "Trip accepted successfully",
+		Data:    trip,
+	}))
+
+	server.webSocketManager.Broadcast("trip_status: "+trip.BookingID, finalResponse(FinalResponse{
+		Status:  true,
+		Message: "Trip accepted",
+		Data:    trip,
+	}))
+}
+
 var tripUpgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
@@ -306,6 +361,10 @@ func (server *Server) tripWebSocket(ctx *gin.Context) {
 
 }
 
+var tripStatusUpgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool { return true },
+}
+
 func (server *Server) tripStatusUpdateWebSocket(ctx *gin.Context) {
 	tokenString := ctx.Query("token")
 	bookingID := ctx.Query("booking_id")
@@ -327,7 +386,7 @@ func (server *Server) tripStatusUpdateWebSocket(ctx *gin.Context) {
 		return
 	}
 
-	conn, err := tripUpgrader.Upgrade(ctx.Writer, ctx.Request, nil)
+	conn, err := tripStatusUpgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		return
 	}
