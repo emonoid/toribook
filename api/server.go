@@ -1,6 +1,6 @@
 package api
 
-import (
+import ( 
 	"fmt"
 
 	db "github.com/emonoid/toribook.git/db/sqlc"
@@ -42,6 +42,7 @@ func NewServer(config utils.Config, store *db.Store) (*Server, error) {
 func (server *Server) setupRouters() {
 	router := gin.Default()
 	protectedRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
+	redisClient := utils.NewRedisClient()
 
 	apiVersion := "/api/v1/"
 	router.GET("/", func(ctx *gin.Context) {
@@ -61,6 +62,11 @@ func (server *Server) setupRouters() {
 	// trip routes
 	protectedRoutes.POST(apiVersion+"trip/create", server.createTrip)
 	protectedRoutes.GET(apiVersion+"trip/:id", server.getTrip)
+
+	// bid routes
+	protectedRoutes.POST("/bid/submit",server.bidSubmitHandler(redisClient))
+	protectedRoutes.GET("/bids/:booking_id", server.getBidsHandler(redisClient))
+	protectedRoutes.GET("/ws/bids/:booking_id", server.BidWebSocketHandler(redisClient))
 
 	server.router = router
 }

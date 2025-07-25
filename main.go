@@ -1,14 +1,15 @@
 package main
 
-import (
+import ( 
 	"database/sql"
 	"log"
 
 	"github.com/emonoid/toribook.git/api"
 	db "github.com/emonoid/toribook.git/db/sqlc"
-	"github.com/emonoid/toribook.git/utils" 
+	"github.com/emonoid/toribook.git/utils"
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
+ 
 
 func main(){
 	config, err := utils.LoadConfig(".")

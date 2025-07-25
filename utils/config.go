@@ -3,6 +3,7 @@ package utils
 import (
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
 )
 
@@ -28,4 +29,11 @@ func LoadConfig(path string) (config Config, err error){
 
 	err = viper.Unmarshal(&config)
 	return
+}
+
+
+func NewRedisClient() *redis.Client {
+	return redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
 }
