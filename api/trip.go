@@ -209,10 +209,32 @@ func (server *Server) getAllTrips(ctx *gin.Context) {
 		return
 	}
 
+	var responseTrips []TripResponse
+	for _, trip := range trips {
+		response := TripResponse{
+			BookingID:       trip.BookingID,
+			TripStatus:      trip.TripStatus,
+			PickupLocation:  trip.PickupLocation,
+			PickupLat:       trip.PickupLat,
+			PickupLong:      trip.PickupLong,
+			DropoffLocation: trip.DropoffLocation,
+			DropoffLat:      trip.DropoffLat,
+			DropoffLong:     trip.DropoffLong,
+			DriverID:        helpers.NullInt64ToPtr(trip.DriverID),
+			DriverName:      helpers.NullStringToPtr(trip.DriverName),
+			DriverMobile:    helpers.NullStringToPtr(trip.DriverMobile),
+			CarID:           helpers.NullInt64ToPtr(trip.CarID),
+			CarType:         helpers.NullStringToPtr(trip.CarType),
+			CarImage:        helpers.NullStringToPtr(trip.CarImage),
+			Fare:            helpers.NullInt64ToPtr(trip.Fare),
+		}
+		responseTrips = append(responseTrips, response)
+	}
+
 	ctx.JSON(http.StatusOK, finalResponse(FinalResponse{
 		Status:  true,
 		Message: "Trips retrieved successfully",
-		Data:    trips,
+		Data:    responseTrips,
 	}))
 
 }
@@ -251,16 +273,34 @@ func (server *Server) updateTripStatus(ctx *gin.Context) {
 		return
 	}
 
+	finalTrip := TripResponse{
+		BookingID:       trip.BookingID,
+		TripStatus:      trip.TripStatus,
+		PickupLocation:  trip.PickupLocation,
+		PickupLat:       trip.PickupLat,
+		PickupLong:      trip.PickupLong,
+		DropoffLocation: trip.DropoffLocation,
+		DropoffLat:      trip.DropoffLat,
+		DropoffLong:     trip.DropoffLong,
+		DriverID:        helpers.NullInt64ToPtr(trip.DriverID),
+		DriverName:      helpers.NullStringToPtr(trip.DriverName),
+		DriverMobile:    helpers.NullStringToPtr(trip.DriverMobile),
+		CarID:           helpers.NullInt64ToPtr(trip.CarID),
+		CarType:         helpers.NullStringToPtr(trip.CarType),
+		CarImage:        helpers.NullStringToPtr(trip.CarImage),
+		Fare:            helpers.NullInt64ToPtr(trip.Fare),
+	}
+
 	ctx.JSON(http.StatusOK, finalResponse(FinalResponse{
 		Status:  true,
 		Message: "Trip status updated successfully",
-		Data:    trip,
+		Data:    finalTrip,
 	}))
 
 	server.webSocketManager.Broadcast("trip_status: "+trip.BookingID, finalResponse(FinalResponse{
 		Status:  true,
 		Message: "Trip status updated",
-		Data:    trip,
+		Data:    finalTrip,
 	}))
 }
 
@@ -306,16 +346,34 @@ func (server *Server) tripAccept(ctx *gin.Context) {
 		return
 	}
 
+	finalTrip := TripResponse{
+		BookingID:       trip.BookingID,
+		TripStatus:      trip.TripStatus,
+		PickupLocation:  trip.PickupLocation,
+		PickupLat:       trip.PickupLat,
+		PickupLong:      trip.PickupLong,
+		DropoffLocation: trip.DropoffLocation,
+		DropoffLat:      trip.DropoffLat,
+		DropoffLong:     trip.DropoffLong,
+		DriverID:        helpers.NullInt64ToPtr(trip.DriverID),
+		DriverName:      helpers.NullStringToPtr(trip.DriverName),
+		DriverMobile:    helpers.NullStringToPtr(trip.DriverMobile),
+		CarID:           helpers.NullInt64ToPtr(trip.CarID),
+		CarType:         helpers.NullStringToPtr(trip.CarType),
+		CarImage:        helpers.NullStringToPtr(trip.CarImage),
+		Fare:            helpers.NullInt64ToPtr(trip.Fare),
+	}
+
 	ctx.JSON(http.StatusOK, finalResponse(FinalResponse{
 		Status:  true,
 		Message: "Trip accepted successfully",
-		Data:    trip,
+		Data:    finalTrip,
 	}))
 
 	server.webSocketManager.Broadcast("trip_status: "+trip.BookingID, finalResponse(FinalResponse{
 		Status:  true,
 		Message: "Trip accepted",
-		Data:    trip,
+		Data:    finalTrip,
 	}))
 }
 
@@ -329,8 +387,8 @@ func (server *Server) tripWebSocket(ctx *gin.Context) {
 	if tokenString == "" {
 		ctx.JSON(http.StatusUnauthorized, finalResponse(FinalResponse{
 			Status:  false,
-			Message: "Trip created successfully",
-			Data:    "Missing token"}))
+			Message: "Missing token",
+			Data:  nil }))
 		return
 	}
 

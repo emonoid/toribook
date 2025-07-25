@@ -73,7 +73,7 @@ func (server *Server) setupRouters() {
 	router.GET(apiVersion+"ws/trips", server.tripWebSocket)
 	protectedRoutes.GET(apiVersion+"trip/all", server.getAllTrips)
 	protectedRoutes.POST(apiVersion+"trip/update-status", server.updateTripStatus)
-	router.GET(apiVersion+"ws/trip/update-status", server.tripStatusUpdateWebSocket)
+	router.GET(apiVersion+"ws/trip/listen-update-status", server.tripStatusUpdateWebSocket)
 	protectedRoutes.POST(apiVersion+"trip/accept", server.tripAccept)
 
 	// bid routes
