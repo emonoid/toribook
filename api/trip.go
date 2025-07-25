@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	db "github.com/emonoid/toribook.git/db/sqlc"
-	"github.com/emonoid/toribook.git/utils"
+	"github.com/emonoid/toribook.git/helpers"
 	"github.com/gin-gonic/gin"
 )
 
@@ -63,13 +63,13 @@ func (server *Server) createTrip(ctx *gin.Context) {
 		DropoffLocation: req.DropoffLocation,
 		DropoffLat:      req.DropoffLat,
 		DropoffLong:     req.DropoffLong,
-		DriverID:        utils.MakeNullInt64(req.DriverID),
-		DriverName:      utils.MakeNullString(req.DriverName),
-		DriverMobile:    utils.MakeNullString(req.DriverMobile),
-		CarID:           utils.MakeNullInt64(req.CarID),
-		CarType:         utils.MakeNullString(req.CarType),
-		CarImage:        utils.MakeNullString(req.CarImage),
-		Fare:            utils.MakeNullInt32(req.Fare),
+		DriverID:        helpers.MakeNullInt64(req.DriverID),
+		DriverName:      helpers.MakeNullString(req.DriverName),
+		DriverMobile:    helpers.MakeNullString(req.DriverMobile),
+		CarID:           helpers.MakeNullInt64(req.CarID),
+		CarType:         helpers.MakeNullString(req.CarType),
+		CarImage:        helpers.MakeNullString(req.CarImage),
+		Fare:            helpers.MakeNullInt32(req.Fare),
 	}
 
 	trip, err := server.store.CreateTrip(ctx, arg)
@@ -90,13 +90,13 @@ func (server *Server) createTrip(ctx *gin.Context) {
 		DropoffLocation: trip.DropoffLocation,
 		DropoffLat:      trip.DropoffLat,
 		DropoffLong:     trip.DropoffLong,
-		DriverID:        utils.NullInt64ToPtr(trip.DriverID),
-		DriverName:      utils.NullStringToPtr(trip.DriverName),
-		DriverMobile:    utils.NullStringToPtr(trip.DriverMobile),
-		CarID:           utils.NullInt64ToPtr(trip.CarID),
-		CarType:         utils.NullStringToPtr(trip.CarType),
-		CarImage:        utils.NullStringToPtr(trip.CarImage),
-		Fare:            utils.NullInt32ToPtr(trip.Fare),
+		DriverID:        helpers.NullInt64ToPtr(trip.DriverID),
+		DriverName:      helpers.NullStringToPtr(trip.DriverName),
+		DriverMobile:    helpers.NullStringToPtr(trip.DriverMobile),
+		CarID:           helpers.NullInt64ToPtr(trip.CarID),
+		CarType:         helpers.NullStringToPtr(trip.CarType),
+		CarImage:        helpers.NullStringToPtr(trip.CarImage),
+		Fare:            helpers.NullInt32ToPtr(trip.Fare),
 	}
 
 	ctx.JSON(http.StatusOK, finalResponse(FinalResponse{
@@ -141,13 +141,13 @@ func (server *Server) getTrip(ctx *gin.Context) {
 		DropoffLocation: trip.DropoffLocation,
 		DropoffLat:      trip.DropoffLat,
 		DropoffLong:     trip.DropoffLong,
-		DriverID:        utils.NullInt64ToPtr(trip.DriverID),
-		DriverName:      utils.NullStringToPtr(trip.DriverName),
-		DriverMobile:    utils.NullStringToPtr(trip.DriverMobile),
-		CarID:           utils.NullInt64ToPtr(trip.CarID),
-		CarType:         utils.NullStringToPtr(trip.CarType),
-		CarImage:        utils.NullStringToPtr(trip.CarImage),
-		Fare:            utils.NullInt32ToPtr(trip.Fare),
+		DriverID:        helpers.NullInt64ToPtr(trip.DriverID),
+		DriverName:      helpers.NullStringToPtr(trip.DriverName),
+		DriverMobile:    helpers.NullStringToPtr(trip.DriverMobile),
+		CarID:           helpers.NullInt64ToPtr(trip.CarID),
+		CarType:         helpers.NullStringToPtr(trip.CarType),
+		CarImage:        helpers.NullStringToPtr(trip.CarImage),
+		Fare:            helpers.NullInt32ToPtr(trip.Fare),
 	}
 
 	ctx.JSON(http.StatusOK, finalResponse(FinalResponse{

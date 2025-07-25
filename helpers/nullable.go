@@ -1,8 +1,8 @@
-package utils
+package helpers
 
 import "database/sql"
 
-/// making nullable types from pointers
+/// converting nullable types to sql.Null types
 func MakeNullString(s *string) sql.NullString {
 	if s != nil {
 		return sql.NullString{String: *s, Valid: true}
@@ -25,7 +25,7 @@ func MakeNullInt32(i *int32) sql.NullInt32 {
 }
 
 
-// converting nullable types to pointers
+// converting sql.Null types to nullable types
 func NullInt64ToPtr(n sql.NullInt64) *int64 {
 	if n.Valid {
 		return &n.Int64
