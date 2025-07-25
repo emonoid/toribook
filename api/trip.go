@@ -7,6 +7,7 @@ import (
 	db "github.com/emonoid/toribook.git/db/sqlc"
 	"github.com/emonoid/toribook.git/helpers"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 type CreateTripRequest struct {
@@ -103,6 +104,11 @@ func (server *Server) createTrip(ctx *gin.Context) {
 		Status:  false,
 		Message: "Trip created successfully",
 		Data:    response}))
+
+	server.webSocketManager.Broadcast("trips", gin.H{
+		"type": "trip_created",
+		"data": response,
+	})
 }
 
 type GetTripRequest struct {
@@ -154,5 +160,44 @@ func (server *Server) getTrip(ctx *gin.Context) {
 		Status:  false,
 		Message: "Success",
 		Data:    response}))
+
+}
+
+var tripUpgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool { return true },
+}
+
+func (server *Server) tripWebSocket(ctx *gin.Context) { 
+	tokenString := ctx.Query("token")
+
+	if tokenString == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing token"})
+		return
+	}
+
+	_, err := server.tokenMaker.VerifyToken(tokenString)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, finalResponse(FinalResponse{
+			Status:  false,
+			Message: err.Error()}))
+		return
+	}
+
+	conn, err := tripUpgrader.Upgrade(ctx.Writer, ctx.Request, nil)
+	if err != nil {
+		return
+	}
+
+	server.webSocketManager.AddClient("trips", conn)
+	defer func() {
+		server.webSocketManager.RemoveClient("trips", conn)
+		conn.Close()
+	}()
+
+	for {
+		if _, _, err := conn.ReadMessage(); err != nil {
+			break
+		}
+	}
 
 }

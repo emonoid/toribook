@@ -1,9 +1,10 @@
 package api
 
-import ( 
+import (
 	"fmt"
 
 	db "github.com/emonoid/toribook.git/db/sqlc"
+	"github.com/emonoid/toribook.git/helpers"
 	"github.com/emonoid/toribook.git/token"
 	"github.com/emonoid/toribook.git/utils"
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,7 @@ type Server struct {
 	router     *gin.Engine
 	tokenMaker token.Maker
 	config     utils.Config
+	webSocketManager *helpers.WebSocketManager
 }
 
 func NewServer(config utils.Config, store *db.Store) (*Server, error) {
@@ -27,7 +29,7 @@ func NewServer(config utils.Config, store *db.Store) (*Server, error) {
 		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
 
-	server := &Server{store: store, tokenMaker: tokenMaker, config: config}
+	server := &Server{store: store, tokenMaker: tokenMaker, config: config, webSocketManager: helpers.NewWebSocketManager()}
 
 	// Register custom validation if needed
 	// if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
@@ -62,6 +64,7 @@ func (server *Server) setupRouters() {
 	// trip routes
 	protectedRoutes.POST(apiVersion+"trip/create", server.createTrip)
 	protectedRoutes.GET(apiVersion+"trip/:id", server.getTrip)
+	router.GET(apiVersion+"ws/trips", server.tripWebSocket)
 
 	// bid routes
 	protectedRoutes.POST(apiVersion+"bid/submit",server.bidSubmitHandler(redisClient))

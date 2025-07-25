@@ -1,8 +1,8 @@
 package api
 
 import (
-	"encoding/json" 
-	"net/http" 
+	"encoding/json"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -23,9 +23,9 @@ type Bid struct {
 	CarImage     string `json:"car_image"`
 }
 
-func (s *Server) bidSubmitHandler(redisClient *redis.Client) gin.HandlerFunc {
+func (server *Server) bidSubmitHandler(redisClient *redis.Client) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		s.bidSubmit(ctx, redisClient)
+		server.bidSubmit(ctx, redisClient)
 	}
 }
 
@@ -44,9 +44,9 @@ func (server *Server) bidSubmit(ctx *gin.Context, redisClient *redis.Client) {
 	ctx.JSON(200, gin.H{"status": "bid placed"})
 }
 
-func (s *Server) getBidsHandler(redisClient *redis.Client) gin.HandlerFunc {
+func (server *Server) getBidsHandler(redisClient *redis.Client) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		s.getBids(ctx, redisClient)
+		server.getBids(ctx, redisClient)
 	}
 }
 
@@ -103,22 +103,22 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-func (s *Server) BidWebSocketHandler(redisClient *redis.Client) gin.HandlerFunc {
+func (server *Server) BidWebSocketHandler(redisClient *redis.Client) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		s.bidWebSocket(ctx, redisClient)
+		server.bidWebSocket(ctx, redisClient)
 	}
 }
 
-func (s *Server) bidWebSocket(ctx *gin.Context, redisClient *redis.Client) {
+func (server *Server) bidWebSocket(ctx *gin.Context, redisClient *redis.Client) {
 
 	bookingID := ctx.Param("booking_id")
 	tokenString := ctx.Query("token")
 	if tokenString == "" {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing token"})
 		return
-	}  
+	}
 
-	_, err := s.tokenMaker.VerifyToken(tokenString)
+	_, err := server.tokenMaker.VerifyToken(tokenString)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, finalResponse(FinalResponse{
 			Status:  false,
@@ -138,5 +138,4 @@ func (s *Server) bidWebSocket(ctx *gin.Context, redisClient *redis.Client) {
 	for msg := range ch {
 		conn.WriteMessage(websocket.TextMessage, []byte(msg.Payload))
 	}
-
 }
